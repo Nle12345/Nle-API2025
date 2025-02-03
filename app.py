@@ -37,24 +37,15 @@ def get_fun_fact(n):
 @app.route('/api/classify-number', methods=['GET'])
 def classify_number():
     number = request.args.get('number')
-    
-    # Check if the input is a valid number (integer or float, including negatives)
-    try:
-        number = float(number)  # Try to convert to float
-    except ValueError:
+
+    # Check if the input is a valid integer
+    if number is None or not number.lstrip('-').isdigit():  # Handle negative numbers as well
         return jsonify({
             "number": number,
             "error": True
         }), 400
     
-    # Ensure that we're working with a valid number (integer or float)
-    if number != int(number):
-        return jsonify({
-            "number": number,
-            "error": True
-        }), 400
-    
-    number = int(number)  # Convert to integer if it’s valid
+    number = int(number)  # Convert the string input to an integer
     
     # Determine properties
     properties = []
