@@ -1,40 +1,53 @@
 from flask import Flask, request, jsonify
-import math 
+import math
+import requests
 
 app = Flask(__name__)
 
 # Helper functions
 
-# Function to check if the number is prime
 def is_prime(n):
+    """Check if a number is prime."""
     if n <= 1:
         return False
-    for i in range(2, int(math.sqrt(n)) + 1):
-        if n % i == 0:
+    if n <= 3:
+        return True
+    if n % 2 == 0 or n % 3 == 0:
+        return False
+    i = 5
+    while i * i <= n:
+        if n % i == 0 or n % (i + 2) == 0:
             return False
+        i += 6
     return True
 
-# Function to check if the number is perfect
 def is_perfect(n):
+    """Check if a number is perfect."""
+    if n <= 1:
+        return False
     divisors = [i for i in range(1, n) if n % i == 0]
     return sum(divisors) == n
 
-# Function to check if the number is an Armstrong number
 def is_armstrong(n):
+    """Check if a number is an Armstrong number."""
     if n < 0:
-        return False  # Armstrong numbers are typically defined for positive integers
+        return False
     digits = [int(digit) for digit in str(n)]
     return n == sum([digit ** len(digits) for digit in digits])
 
-# Function to calculate the sum of the digits
 def digit_sum(n):
-    return sum([int(digit) for digit in str(abs(n))])  # Use abs to handle negative numbers
+    """Calculate the sum of the digits of a number."""
+    return sum(int(digit) for digit in str(abs(n)))
 
-# Function to get the fun fact about the number (Math type from Numbers API)
 def get_fun_fact(n):
-    if n < 0:
-        return "No fun fact available for negative numbers."
-    return f"{n} is an Armstrong number because " + " + ".join([f"{d}^3" for d in str(n)]) + f" = {n}"
+    """Fetch a fun fact about the number using the Numbers API."""
+    try:
+        response = requests.get(f"http://numbersapi.com/{n}/math")
+        if response.status_code == 200:
+            return response.text
+        return "No fun fact available."
+    except requests.RequestException:
+        return "No fun fact available."
 
 # API route for classifying numbers
 @app.route('/api/classify-number', methods=['GET'])
@@ -43,16 +56,27 @@ def classify_number():
         # Get the number from the query parameters
         number = request.args.get('number', type=int)
         
-        # If the number is invalid (not a valid integer)
+        # Validate the input
         if number is None:
             return jsonify({
-                "number": "alphabet", 
+                "number": "alphabet",
                 "error": True
             }), 400
         
+        # Handle negative numbers
+        if number < 0:
+            return jsonify({
+                "number": number,
+                "is_prime": False,
+                "is_perfect": False,
+                "properties": ["negative"],
+                "digit_sum": digit_sum(number),
+                "fun_fact": "No fun fact available for negative numbers."
+            }), 200
+        
         # Check properties of the number
-        prime = is_prime(abs(number))  # Use abs to handle negative numbers
-        perfect = is_perfect(abs(number))  # Use abs to handle negative numbers
+        prime = is_prime(number)
+        perfect = is_perfect(number)
         armstrong = is_armstrong(number)
         properties = []
         
@@ -64,8 +88,8 @@ def classify_number():
         else:
             properties.append("odd")
         
-        # Fun fact about the number
-        fun_fact = get_fun_fact(number) if armstrong else "No fun fact available."
+        # Fetch fun fact
+        fun_fact = get_fun_fact(number)
         
         # Create the response JSON
         response = {
@@ -85,6 +109,14 @@ def classify_number():
         return jsonify({
             "error": str(e)
         }), 500
+
+# Enable CORS
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+    response.headers.add('Access-Control-Allow-Methods', 'GET')
+    return response
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
