@@ -1,6 +1,5 @@
 from flask import Flask, jsonify, request
 import math
-import time
 
 app = Flask(__name__)
 
@@ -22,39 +21,40 @@ def is_perfect(n):
 
 # Helper function to check if a number is an Armstrong number
 def is_armstrong(n):
-    digits = [int(d) for d in str(n)]
+    digits = [int(d) for d in str(abs(n))]  # Ignore negative sign for Armstrong check
     length = len(digits)
-    return sum([d ** length for d in digits]) == n
+    return sum([d ** length for d in digits]) == abs(n)  # Use absolute value for Armstrong check
 
 # Helper function to calculate the sum of digits
 def sum_of_digits(n):
-    return sum(int(d) for d in str(n))
+    return sum(int(d) for d in str(abs(n)))  # Ignore negative sign for sum of digits
 
-# Helper function to get a fun fact (Armstrong number specific)
+# Helper function to get a fun fact (placeholder for now)
 def get_fun_fact(n):
-    if is_armstrong(n):
-        digits = [int(d) for d in str(n)]
-        length = len(digits)
-        armstrong_sum = sum([d ** length for d in digits])
-        return f"{n} is an Armstrong number because " + " + ".join([f"{d}^{length}" for d in digits]) + f" = {armstrong_sum}"
     return f"{n} is an interesting number!"
 
 # API endpoint
 @app.route('/api/classify-number', methods=['GET'])
 def classify_number():
-    # Track the start time for response time measurement
-    start_time = time.time()
-
     number = request.args.get('number')
     
-    # Basic input validation: Check if the number is provided and is an integer
-    if not number or not number.lstrip('-').isdigit():
+    # Check if the input is a valid number (integer or float, including negatives)
+    try:
+        number = float(number)  # Try to convert to float
+    except ValueError:
         return jsonify({
             "number": number,
             "error": True
         }), 400
     
-    number = int(number)
+    # Ensure that we're working with a valid number (integer or float)
+    if number != int(number):
+        return jsonify({
+            "number": number,
+            "error": True
+        }), 400
+    
+    number = int(number)  # Convert to integer if it’s valid
     
     # Determine properties
     properties = []
@@ -78,12 +78,7 @@ def classify_number():
         "digit_sum": sum_of_digits(number),
         "fun_fact": get_fun_fact(number)
     }
-
-    # Measure the response time and ensure it is below 500ms
-    response_time = time.time() - start_time
-    if response_time > 0.5:
-        print(f"Warning: Response time exceeded 500ms: {response_time * 1000:.2f}ms")
-
+    
     return jsonify(response), 200
 
 # Run the app
