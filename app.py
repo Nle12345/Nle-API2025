@@ -29,8 +29,13 @@ def is_armstrong(n):
 def sum_of_digits(n):
     return sum(int(d) for d in str(n))
 
-# Helper function to get a fun fact (placeholder for now)
+# Helper function to get a fun fact (Armstrong number specific)
 def get_fun_fact(n):
+    if is_armstrong(n):
+        digits = [int(d) for d in str(n)]
+        length = len(digits)
+        armstrong_sum = sum([d ** length for d in digits])
+        return f"{n} is an Armstrong number because " + " + ".join([f"{d}^{length}" for d in digits]) + f" = {armstrong_sum}"
     return f"{n} is an interesting number!"
 
 # API endpoint
@@ -66,7 +71,7 @@ def classify_number():
         "is_prime": is_prime(number),
         "is_perfect": is_perfect(number),
         "properties": properties,
-        "class_sum": sum_of_digits(number),
+        "digit_sum": sum_of_digits(number),
         "fun_fact": get_fun_fact(number)
     }
     
