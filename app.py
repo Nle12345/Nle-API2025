@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, request
 import math
+import time
 
 app = Flask(__name__)
 
@@ -41,9 +42,12 @@ def get_fun_fact(n):
 # API endpoint
 @app.route('/api/classify-number', methods=['GET'])
 def classify_number():
+    # Track the start time for response time measurement
+    start_time = time.time()
+
     number = request.args.get('number')
     
-    # Check if the input is a valid number
+    # Basic input validation: Check if the number is provided and is an integer
     if not number or not number.lstrip('-').isdigit():
         return jsonify({
             "number": number,
@@ -74,7 +78,12 @@ def classify_number():
         "digit_sum": sum_of_digits(number),
         "fun_fact": get_fun_fact(number)
     }
-    
+
+    # Measure the response time and ensure it is below 500ms
+    response_time = time.time() - start_time
+    if response_time > 0.5:
+        print(f"Warning: Response time exceeded 500ms: {response_time * 1000:.2f}ms")
+
     return jsonify(response), 200
 
 # Run the app
