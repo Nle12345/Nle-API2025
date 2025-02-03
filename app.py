@@ -38,38 +38,44 @@ def get_fun_fact(n):
 def classify_number():
     number = request.args.get('number')
 
-    # Check if the input is a valid integer
-    if number is None or not number.lstrip('-').isdigit():  # Handle negative numbers as well
+    # Check if the input is a valid number (integer or floating-point)
+    try:
+        number = float(number)  # Convert the string input to a float
+    except (ValueError, TypeError):
         return jsonify({
             "number": number,
-            "error": True
+            "error": True,
+            "message": "Invalid input. Please provide a valid number."
         }), 400
-    
-    number = int(number)  # Convert the string input to an integer
-    
-    # Determine properties
+
+    # Determine properties (only for integers)
     properties = []
-    if is_prime(number):
-        properties.append("prime")
-    if is_perfect(number):
-        properties.append("perfect")
-    if is_armstrong(number):
-        properties.append("armstrong")
-    if number % 2 == 0:
-        properties.append("even")
+    if number == int(number):  # Check if the number is an integer
+        number = int(number)  # Convert to integer for property checks
+        if is_prime(number):
+            properties.append("prime")
+        if is_perfect(number):
+            properties.append("perfect")
+        if is_armstrong(number):
+            properties.append("armstrong")
+        if number % 2 == 0:
+            properties.append("even")
+        else:
+            properties.append("odd")
     else:
-        properties.append("odd")
-    
+        # If the number is floating-point, only include basic properties
+        properties.append("floating-point")
+
     # Prepare response
     response = {
         "number": number,
-        "is_prime": is_prime(number),
-        "is_perfect": is_perfect(number),
+        "is_prime": is_prime(number) if number == int(number) else False,
+        "is_perfect": is_perfect(number) if number == int(number) else False,
         "properties": properties,
-        "digit_sum": sum_of_digits(number),
+        "digit_sum": sum_of_digits(int(number)) if number == int(number) else None,
         "fun_fact": get_fun_fact(number)
     }
-    
+
     return jsonify(response), 200
 
 # Run the app
