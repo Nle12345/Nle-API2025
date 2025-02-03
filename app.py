@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, request
 import math
-import requests  # For fetching fun facts from Numbers API
+import requests
 
 app = Flask(__name__)
 
@@ -30,12 +30,16 @@ def is_armstrong(n):
 def sum_of_digits(n):
     return sum(int(d) for d in str(abs(n)))  # Ignore negative sign for sum of digits
 
-# Helper function to get a fun fact from Numbers API
+# Helper function to get a fun fact from Numbers API or use a placeholder
 def get_fun_fact(n):
-    response = requests.get(f"http://numbersapi.com/{n}/math")
-    if response.status_code == 200:
-        return response.text
-    return f"{n} is an interesting number!"
+    try:
+        response = requests.get(f"http://numbersapi.com/{n}/math")
+        if response.status_code == 200:
+            return response.text
+        else:
+            return f"{n} is an interesting number!"  # Fallback message
+    except Exception:
+        return f"Could not fetch a fun fact for {n}."  # Error message
 
 # API endpoint
 @app.route('/api/classify-number', methods=['GET'])
@@ -52,31 +56,36 @@ def classify_number():
             "message": "Invalid input. Please provide a valid number."
         }), 400
 
-    # Determine properties (only for integers)
+    # Determine properties
     properties = []
-    integer_value = int(number)  # Convert to integer for property checks
+    digit_sum = None
 
-    if is_prime(integer_value):
-        properties.append("prime")
-    if is_perfect(integer_value):
-        properties.append("perfect")
-    if is_armstrong(integer_value):
-        properties.append("armstrong")
-    
-    # Determine even or odd
-    if integer_value % 2 == 0:
-        properties.append("even")
+    if number == int(number):  # Check if the number is an integer
+        number = int(number)  # Convert to integer for property checks
+        if is_prime(number):
+            properties.append("prime")
+        if is_perfect(number):
+            properties.append("perfect")
+        if is_armstrong(number):
+            properties.append("armstrong")
+        if number % 2 == 0:
+            properties.append("even")
+        else:
+            properties.append("odd")
+        digit_sum = sum_of_digits(number)
     else:
-        properties.append("odd")
+        # Handle floating-point numbers
+        properties.append("floating-point")
+        digit_sum = sum(int(digit) for digit in str(number) if digit.isdigit())  # Sum of digits for float
 
     # Prepare response
     response = {
-        "number": integer_value,
-        "is_prime": is_prime(integer_value),
-        "is_perfect": is_perfect(integer_value),
+        "number": number,
+        "is_prime": is_prime(number) if number == int(number) else False,
+        "is_perfect": is_perfect(number) if number == int(number) else False,
         "properties": properties,
-        "digit_sum": sum_of_digits(integer_value),
-        "fun_fact": get_fun_fact(integer_value)
+        "digit_sum": digit_sum,
+        "fun_fact": get_fun_fact(number)
     }
 
     return jsonify(response), 200
