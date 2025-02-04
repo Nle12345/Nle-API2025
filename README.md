@@ -35,7 +35,7 @@ To run this API locally, follow the steps below:
 
 1. Clone the repository:
 
-   ```bash
+   ```bash 
    git clone https://github.com/Nle12345/Nle-API2025.git
    cd HNG-Numbers-API.git
    ```
