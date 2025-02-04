@@ -43,8 +43,7 @@ def classify_number():
     else:
         properties.append("even")
     # Fetch the fun fact from Numbers API
-    fun_fact_response = requests.get(f"http://numbersapi.com/{number}?json")
-    fun_fact = fun_fact_response.json().get('text', f"No fun fact available for {number}")
+    # Function to check if a number is an Armstrong number def is_armstrong(num): return num == sum(int(digit) ** len(str(num)) for digit in str(num)) # Custom Fun Fact Logic if is_armstrong(int(number)): fun_fact = f"{number} is an Armstrong number because " + " + ".join( [f"{digit}^{len(str(number))}" for digit in str(number)] ) + f" = {number}" else: # Fallback to external API for other numbers fun_fact_response = requests.get(f"http://numbersapi.com/{number}?json") fun_fact = fun_fact_response.json().get('text', f"No fun fact available for {number}")
     # Prepare response
     response = {
         "number": number,
